@@ -1,5 +1,6 @@
 mod fence;
 mod highlight;
+mod treesitter;
 
 use std::ops::RangeInclusive;
 
@@ -67,6 +68,7 @@ pub struct CodeBlock<'config> {
     line_number_start: usize,
     highlight_lines: Vec<RangeInclusive<usize>>,
     hide_lines: Vec<RangeInclusive<usize>>,
+    language: Option<String>,
 }
 
 impl<'config> CodeBlock<'config> {
@@ -100,12 +102,16 @@ impl<'config> CodeBlock<'config> {
                 line_number_start: fence.line_number_start,
                 highlight_lines: fence.highlight_lines,
                 hide_lines: fence.hide_lines,
+                language: fence.language.and_then(|l| Some(l.to_string())),
             },
             html_start,
         )
     }
 
     pub fn highlight(&mut self, content: &str) -> String {
+        if self.language == Some("swift".to_string()) {
+            return treesitter::highlight_swift(content);
+        }
         let mut buffer = String::new();
         let mark_style = self.highlighter.mark_style();
 
